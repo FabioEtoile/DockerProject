@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Livre d'Objectifs</title>
+    <style>
+        .objectif {
+            margin: 10px; 
+            padding: 10px; 
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .supprimer-btn {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .checkbox {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Livre d'Objectifs</h1>
+    
+    <div>
+        <h2>Ajouter un Objectif</h2>
+        <input type="text" id="contenu" placeholder="Nouvel objectif...">
+        <button onclick="ajouterObjectif()">Ajouter</button>
+    </div>
+
+    <div id="objectifs"></div>
+
+    <script>
+        async function chargerObjectifs() {
+            try {
+                const response = await fetch('/backend/objectifs');
+                const data = await response.json();
+                const objectifsDiv = document.getElementById('objectifs');
+                objectifsDiv.innerHTML = data.objectifs.map(obj => `
+                    <div class="objectif">
+                        <p>${obj.contenu}</p>
+                        <input type="checkbox" class="checkbox" ${obj.fait ? 'checked' : ''} 
+                            onchange="basculerObjectif('${obj.contenu}')">
+                        <button class="supprimer-btn" onclick="supprimerObjectif('${obj.contenu}')">Supprimer</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                alert("Erreur lors du chargement des objectifs.");
+            }
+        }
+        async function ajouterObjectif() {
+            const contenu = document.getElementById('contenu').value;
+            if (!contenu) {
+                alert("Veuillez entrer un objectif !");
+                return;
+            }
+
+            try {
+                const response = await fetch('/backend/objectifs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contenu: contenu })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Erreur ajout");
+                }
+
+                document.getElementById('contenu').value = "";
+                chargerObjectifs();
+            } catch (error) {
+                alert("Une erreur s'est produite lors de l'ajout de l'objectif : " + error.message);
+            }
+        }
+        async function supprimerObjectif(contenu) {
+            try {
+                const response = await fetch('/backend/objectifs', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contenu: contenu })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Erreur suppression");
+                }
+
+                chargerObjectifs();
+            } catch (error) {
+                alert("Une erreur s'est produite lors de la suppression de l'objectif : " + error.message);
+            }
+        }
+        async function basculerObjectif(contenu) {
+            try {
+                const response = await fetch('/backend/objectifs', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contenu: contenu })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Erreur mise à jour");
+                }
+
+                chargerObjectifs();
+            } catch (error) {
+                alert("Une erreur s'est produite lors de la mise à jour de l'objectif : " + error.message);
+            }
+        }
+        chargerObjectifs();
+    </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+version: '3.8'  
+
+services:
+  mongodb:
+    image: mongo:latest 
+    container_name: mongodb
+    volumes:
+      - data_mongo:/data/db  
+    networks:
+      - backend_net  
+
+  backend:
+    build: ./backend  
+    container_name: backend-objectif  
+    networks:
+      - backend_net 
+      - frontend_net 
+    depends_on:
+      - mongodb 
+
+  frontend:
+    build: ./frontend 
+    container_name: frontend-objectifs  
+    ports:
+      - "80:80"
+    networks:
+      - frontend_net 
+    depends_on:
+      - backend  
+
+volumes:
+  data_mongo: 
+
+networks:
+  backend_net:
+    driver: bridge 
+    internal: true  
+  frontend_net:
+    driver: bridge  
